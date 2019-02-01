@@ -335,7 +335,6 @@ inline void PxMATRIX::writeRegister(uint16_t reg_value, uint8_t reg_position)
     // b13  - 6   =1 screen off
     pinMode(SPI_BUS_CLK,OUTPUT);
     pinMode(SPI_BUS_MOSI,OUTPUT);
-    digitalWrite(SPI_BUS_CLK,HIGH); // CCK LOW
     digitalWrite(_OE_PIN,LOW);
     digitalWrite(_LATCH_PIN,HIGH);
     digitalWrite(_A_PIN,HIGH);
@@ -343,29 +342,25 @@ inline void PxMATRIX::writeRegister(uint16_t reg_value, uint8_t reg_position)
     digitalWrite(_C_PIN,LOW);
     digitalWrite(_D_PIN,LOW);
 
-    uint8_t reg_bit=0;
     for (uint32_t bit_counter=0; bit_counter < _send_buffer_size*8; bit_counter++)
     {
-      reg_bit=bit_counter%16;
-      if ((reg_value>>reg_bit)&1)
-        digitalWrite(SPI_BUS_MOSI,HIGH);
-      else
-        digitalWrite(SPI_BUS_MOSI,LOW);
+      uint8_t reg_bit=bit_counter%16;
+      if ((reg_value>>reg_bit)&1) {
+          GPIO_REG_SET ( SPI_BUS_MOSI );
+      } else {
+          GPIO_REG_CLEAR ( SPI_BUS_MOSI );
+      }
 
-      delay(1);
-      digitalWrite(SPI_BUS_CLK,LOW); // CLK HIGH
-      delay(1);
-      digitalWrite(SPI_BUS_CLK,HIGH); // CLK LOW
-      delay(1);
+      GPIO_REG_SET(SPI_BUS_CLK);
+      GPIO_REG_CLEAR(SPI_BUS_CLK);
       if ((bit_counter ==  (_send_buffer_size*8 - reg_position-1)))
       {
-        digitalWrite(_LATCH_PIN,LOW);
+        digitalWrite(_LATCH_PIN,HIGH);
       }
     }
-    digitalWrite(_LATCH_PIN,HIGH);
+    digitalWrite(_LATCH_PIN,LOW);
   }
   digitalWrite(_OE_PIN,HIGH);
-
 }
 
 
